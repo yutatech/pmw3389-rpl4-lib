@@ -25,4 +25,4 @@ Makefile
 !CMakeLists.txt
 
 # CodeQL artifacts
-_codeql_detected_source_root
+_codeql_*
