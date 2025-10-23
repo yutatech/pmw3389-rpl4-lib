@@ -23,3 +23,6 @@ cmake_install.cmake
 Makefile
 *.cmake
 !CMakeLists.txt
+
+# CodeQL artifacts
+_codeql_detected_source_root
