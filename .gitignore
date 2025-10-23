@@ -1,28 +1,3 @@
-# Build directories
-build/
-cmake-build-*/
-
-# IDE specific files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Compiled files
-*.o
-*.a
-*.so
-*.dylib
-*.exe
-
-# CMake generated files
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-Makefile
-*.cmake
-!CMakeLists.txt
-
-# CodeQL artifacts
-_codeql_*
+.build
+RPL4
+.vscode

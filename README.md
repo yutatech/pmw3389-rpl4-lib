@@ -32,23 +32,22 @@ target_link_libraries(your_target pmw3389_rpl4_lib)
 The repository includes example programs demonstrating how to use the library. To build the examples:
 
 ```bash
-# Clone the repository with RPL4 dependency
+# Clone the repository
 git clone https://github.com/yutatech/pmw3389-rpl4-lib.git
 cd pmw3389-rpl4-lib
 
-# Create build directory
-mkdir build
-cd build
-
-# Configure CMake with BUILD_EXAMPLES option enabled
-cmake .. -DBUILD_EXAMPLES=ON
-
-# Build the library and examples
-make
+# Run the build script (automatically clones RPL4 and builds)
+./build.sh
 
 # Run the example
-./example/pmw3389_example
+./.build/example/pmw3389_example
 ```
+
+The build script will:
+- Clone the RPL4 dependency if not present
+- Create the `.build` directory
+- Configure CMake with BUILD_EXAMPLES enabled
+- Build the library and examples
 
 The example program demonstrates:
 - Initializing the PMW3389 sensor
