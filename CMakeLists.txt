@@ -4,8 +4,10 @@ project(pmw3389_rpl4_lib)
 # Option to build examples
 option(BUILD_EXAMPLES "Build example programs" OFF)
 
-# Add RPL4 library
-add_subdirectory(RPL4)
+# Add RPL4 library only when building examples
+if(BUILD_EXAMPLES)
+    add_subdirectory(RPL4)
+endif()
 
 add_library(${PROJECT_NAME})
 

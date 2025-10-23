@@ -26,6 +26,6 @@ cmake .. -DBUILD_EXAMPLES=ON
 
 # Build
 echo "Building..."
-make
+cmake --build .
 
 echo "Build complete!"
