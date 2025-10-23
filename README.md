@@ -27,6 +27,38 @@ add_subdirectory(pmw3389-rpl4-lib)
 target_link_libraries(your_target pmw3389_rpl4_lib)
 ```
 
+## Building Examples
+
+The repository includes example programs demonstrating how to use the library. To build the examples:
+
+```bash
+# Clone the repository with RPL4 dependency
+git clone https://github.com/yutatech/pmw3389-rpl4-lib.git
+cd pmw3389-rpl4-lib
+
+# Create build directory
+mkdir build
+cd build
+
+# Configure CMake with BUILD_EXAMPLES option enabled
+cmake .. -DBUILD_EXAMPLES=ON
+
+# Build the library and examples
+make
+
+# Run the example
+./example/pmw3389_example
+```
+
+The example program demonstrates:
+- Initializing the PMW3389 sensor
+- Reading product and revision IDs
+- Configuring CPI (resolution)
+- Reading motion data
+- Using motion burst read mode
+
+**Note:** The examples require a Raspberry Pi 4 with a connected PMW3389 sensor to run successfully.
+
 ## Usage
 
 ### Basic Example
