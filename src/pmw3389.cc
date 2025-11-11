@@ -15,11 +15,14 @@ PMW3389::PMW3389(std::shared_ptr<rpl::SpiBase> spi, uint8_t cs_num,
     : spi_(spi), cs_num_(cs_num), cs_gpio_(cs_gpio) {}
 
 bool PMW3389::Init() {
-  if (cs_gpio_) {
-    cs_gpio_->SetAltFunction(rpl::Gpio::AltFunction::kOutput);
-    cs_gpio_->SetPullRegister(rpl::Gpio::PullRegister::kNoRegister);
-    cs_gpio_->Write(true);
+  if (!cs_gpio_) {
+    std::cerr << "CS GPIO is not provided!" << std::endl;
+    return false;
   }
+
+  cs_gpio_->SetAltFunction(rpl::Gpio::AltFunction::kOutput);
+  cs_gpio_->SetPullRegister(rpl::Gpio::PullRegister::kNoRegister);
+  cs_gpio_->Write(true);
 
   // Power up reset
   PowerUpReset();
@@ -67,11 +70,8 @@ bool PMW3389::ReadRegister(Register address, uint8_t* data) {
   tx_buf[1] = 0;
 
   EnableCs();
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 2);
-  DelayMicroseconds(35);  // tSRAD - delay before reading data
-
-  // Read the data byte
-  tx_buf[0] = 0;
+  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
+  DelayMicroseconds(180);  // tSRAD - delay before reading data
   spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
   *data = rx_buf[0];
 
@@ -107,6 +107,7 @@ uint8_t PMW3389::ReadSromId() {
 }
 
 bool PMW3389::ReadMotion(int16_t* delta_x, int16_t* delta_y) {
+  WriteRegister(Register::Motion, 0x20);
   uint8_t motion;
   ReadRegister(Register::Motion, &motion);
 
@@ -187,26 +188,32 @@ uint16_t PMW3389::GetCPI() {
 
 bool PMW3389::UploadFirmware(const uint8_t* firmware_data, size_t length) {
   // Write 0x1D to Config2 register for wireless mouse design
-  WriteRegister(Register::Config2, 0x1D);
+  WriteRegister(Register::Config2, 0x00);
 
   // Write 0x18 to SROM_Enable register to initialize
-  WriteRegister(Register::SROM_Enable, 0x18);
+  WriteRegister(Register::SROM_Enable, 0x1D);
 
   // Wait for 10ms
   DelayMicroseconds(10000);
 
   // Write 0x18 to SROM_Enable register again to start SROM download
   WriteRegister(Register::SROM_Enable, 0x18);
+  DelayMicroseconds(120);
 
   // Write SROM_Load_Burst register
-  uint8_t tx_buf[length + 1];
-  uint8_t rx_buf[length + 1];
-
-  tx_buf[0] = static_cast<uint8_t>(Register::SROM_Load_Burst) | 0x80;
-  for (size_t i = 0; i < length; i++) { tx_buf[i + 1] = firmware_data[i]; }
+  uint8_t tx_buf[1];
+  uint8_t rx_buf[1];
 
   EnableCs();
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, length + 1);
+
+  tx_buf[0] = static_cast<uint8_t>(Register::SROM_Load_Burst) | 0x80;
+  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
+  DelayMicroseconds(15);
+  for (size_t i = 0; i < length; i++) {
+    tx_buf[0] = firmware_data[i];
+    spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
+    DelayMicroseconds(15);
+  }
   DelayMicroseconds(20);
   DisableCs();
   DelayMicroseconds(200);  // Wait for SROM download to complete
@@ -216,7 +223,28 @@ bool PMW3389::UploadFirmware(const uint8_t* firmware_data, size_t length) {
   std::cout << "SROM ID after upload: 0x" << std::hex
             << static_cast<int>(srom_id) << std::dec << std::endl;
 
+  WriteRegister(Register::Config2, 0x00);
+
   return true;
+}
+
+bool PMW3389::RunSROMSelfTest() {
+  WriteRegister(Register::SROM_Enable, 0x15);
+  DelayMicroseconds(10000);
+  uint8_t read_buf[2];
+  ReadRegister(Register::Data_Out_Upper, &read_buf[0]);
+  ReadRegister(Register::Data_Out_Lower, &read_buf[1]);
+  uint16_t result = (read_buf[0] << 8) | read_buf[1];
+  std::cout << "result of SROM self-test: 0x" << std::hex << result << std::dec << std::endl;
+
+  bool status = result == 0xBEEF;
+  if (status) {
+    std::cout << "SROM self-test passed!" << std::endl;
+  } else {
+    std::cout << "SROM self-test failed!" << std::endl;
+  }
+
+  return status;
 }
 
 void PMW3389::SetRunMode() {

@@ -30,7 +30,7 @@ struct MotionBurstData {
 class PMW3389 {
  public:
   PMW3389(std::shared_ptr<rpl::SpiBase> spi, uint8_t cs_num,
-          std::shared_ptr<rpl::Gpio> cs_gpio = nullptr);
+          std::shared_ptr<rpl::Gpio> cs_gpio);
   ~PMW3389() = default;
 
   /**
@@ -131,6 +131,8 @@ class PMW3389 {
    * @return true if upload is successful, false if upload fails.
    */
   bool UploadFirmware(const uint8_t* firmware_data, size_t length);
+
+  bool RunSROMSelfTest();
 
   /**
    * @brief Set the sensor to run mode (normal operation).
