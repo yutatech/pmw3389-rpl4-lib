@@ -131,19 +131,19 @@ bool PMW3389::ReadMotion(int16_t* delta_x, int16_t* delta_y) {
 }
 
 bool PMW3389::ReadMotionBurst(MotionBurstData* data) {
-  uint8_t tx_buf[13];
-  uint8_t rx_buf[13];
+  uint8_t tx_buf[12];
+  uint8_t rx_buf[12];
 
   // Send Motion_Burst address
-  tx_buf[0] = static_cast<uint8_t>(Register::Motion_Burst) & 0x7F;
+  WriteRegister(Register::Motion_Burst, 0x00);
 
   EnableCs();
+  tx_buf[0] = static_cast<uint8_t>(Register::Motion_Burst);
   spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
   DelayMicroseconds(35);  // tSRAD
+  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 12);
 
   // Read 12 bytes of burst data
-  for (int i = 0; i < 12; i++) { tx_buf[i] = 0; }
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 12);
   DisableCs();
 
   // Parse the burst data

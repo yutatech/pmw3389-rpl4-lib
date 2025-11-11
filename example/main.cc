@@ -375,13 +375,21 @@ int main() {
 
   // Demonstrate motion burst read
   std::cout << "\nReading motion burst data..." << std::endl;
-  pmw3389_rpl4_lib::MotionBurstData burst_data;
-  if (sensor.ReadMotionBurst(&burst_data)) {
-    std::cout << "Burst read successful:" << std::endl;
-    std::cout << "  Delta X: " << burst_data.delta_x << std::endl;
-    std::cout << "  Delta Y: " << burst_data.delta_y << std::endl;
-    std::cout << "  SQUAL: " << static_cast<int>(burst_data.squal) << std::endl;
-    std::cout << "  Shutter: " << burst_data.shutter << std::endl;
+
+  start_time = std::chrono::steady_clock::now();
+  motion_count = 0;
+
+  while (std::chrono::steady_clock::now() - start_time <
+         std::chrono::seconds(10)) {
+    pmw3389_rpl4_lib::MotionBurstData burst_data;
+    if (sensor.ReadMotionBurst(&burst_data)) {
+      std::cout << "Burst read successful:";
+      std::cout << "  Delta X: " << burst_data.delta_x;
+      std::cout << "  Delta Y: " << burst_data.delta_y;
+      std::cout << "  SQUAL: " << static_cast<int>(burst_data.squal);
+      std::cout << "  Shutter: " << burst_data.shutter << std::endl;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
   std::cout << "\nExample completed successfully!" << std::endl;
