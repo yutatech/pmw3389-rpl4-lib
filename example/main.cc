@@ -339,8 +339,8 @@ int main() {
             << std::dec << std::endl;
 
   // Set CPI to 1600
-  std::cout << "Setting CPI to 1600..." << std::endl;
-  if (sensor.SetCPI(1600)) {
+  std::cout << "Setting CPI to 16000..." << std::endl;
+  if (sensor.SetCPI(16000)) {
     uint16_t cpi = sensor.GetCPI();
     std::cout << "CPI set to: " << cpi << std::endl;
   }
