@@ -23,6 +23,11 @@ namespace pmw3389_rpl4_lib {
  * This function should configure SPI and GPIO peripherals for communication
  * with the PMW3389 sensor.
  *
+ * Typical configuration:
+ * - SPI Mode 3 (CPOL=1, CPHA=1)
+ * - Clock speed: ~2 MHz recommended
+ * - CS pin configured as output, initially high
+ *
  * @return true if initialization is successful, false otherwise
  */
 bool PeripheralInit();
