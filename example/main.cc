@@ -1,12 +1,8 @@
 #include <chrono>
 #include <iostream>
-#include <memory>
 #include <thread>
 
 #include "pmw3389_rpl4_lib/pmw3389.h"
-#include "rpl4/peripheral/gpio.hpp"
-#include "rpl4/peripheral/spi.hpp"
-#include "rpl4/rpl4.hpp"
 
 const uint8_t firmware_data[] = {
 0x01, 0xe8, 0xba, 0x26, 0x0b, 0xb2, 0xbe, 0xfe, 0x7e, 0x5f, 0x3c, 0xdb, 0x15, 0xa8, 0xb3, 
@@ -287,30 +283,10 @@ int main() {
   std::cout << "PMW3389 Sensor Example" << std::endl;
   std::cout << "======================" << std::endl;
 
-  // Initialize RPL4
-  rpl::Init();
-
-  // Get SPI instance
-  std::shared_ptr<rpl::Spi> spi = rpl::Spi::GetInstance(rpl::Spi::Port::kSpi0);
-
-  // Configure SPI GPIOs
-  rpl::Gpio::SetAltFunction(9, rpl::Gpio::AltFunction::kAlt0);   // SPI0_MISO
-  rpl::Gpio::SetAltFunction(10, rpl::Gpio::AltFunction::kAlt0);  // SPI0_MOSI
-  rpl::Gpio::SetAltFunction(11, rpl::Gpio::AltFunction::kAlt0);  // SPI0_SCLK
-
-  auto cs_pin = rpl::Gpio::GetInstance(8);  // GPIO pin 8 for CS
-
-  // Configure SPI settings
-  spi->SetClockPhase(rpl::Spi::ClockPhase::kMiddle);
-  spi->SetClockPolarity(rpl::Spi::ClockPolarity::kHigh);
-  spi->SetClockDivider(64);  // Adjust based on your needs
-  spi->SetCs0Polarity(rpl::Spi::CsPolarity::kLow);
-  spi->SetReadEnable(rpl::Spi::ReadEnable::kDisable);
-
   // Create PMW3389 instance
-  pmw3389_rpl4_lib::PMW3389 sensor(spi, 0, cs_pin);
+  pmw3389_rpl4_lib::PMW3389 sensor;
 
-  // Initialize sensor
+  // Initialize sensor (peripheral initialization happens inside)
   std::cout << "Initializing sensor..." << std::endl;
   if (!sensor.Init()) {
     std::cerr << "Failed to initialize sensor" << std::endl;

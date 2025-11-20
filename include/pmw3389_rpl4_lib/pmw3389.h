@@ -3,12 +3,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 
+#include "pmw3389_rpl4_lib/peripheral_interface.h"
 #include "pmw3389_rpl4_lib/registers.h"
-#include "rpl4/peripheral/gpio.hpp"
-#include "rpl4/peripheral/spi_base.hpp"
-#include "rpl4/rpl4.hpp"
 
 namespace pmw3389_rpl4_lib {
 
@@ -29,8 +26,7 @@ struct MotionBurstData {
 
 class PMW3389 {
  public:
-  PMW3389(std::shared_ptr<rpl::SpiBase> spi, uint8_t cs_num,
-          std::shared_ptr<rpl::Gpio> cs_gpio);
+  PMW3389();
   ~PMW3389() = default;
 
   /**
@@ -155,10 +151,6 @@ class PMW3389 {
   void SetRest3Mode();
 
  private:
-  std::shared_ptr<rpl::SpiBase> spi_;
-  std::shared_ptr<rpl::Gpio> cs_gpio_;
-  uint8_t cs_num_;
-
   void EnableCs();
   void DisableCs();
   void DelayMicroseconds(uint32_t us);
