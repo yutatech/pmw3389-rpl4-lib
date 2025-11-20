@@ -1,28 +1,20 @@
 #include "pmw3389_rpl4_lib/pmw3389.h"
 
-#include <chrono>
 #include <iostream>
-#include <thread>
 
+#include "pmw3389_rpl4_lib/peripheral_interface.h"
 #include "pmw3389_rpl4_lib/registers.h"
-#include "rpl4/peripheral/gpio.hpp"
-#include "rpl4/peripheral/spi.hpp"
 
 namespace pmw3389_rpl4_lib {
 
-PMW3389::PMW3389(std::shared_ptr<rpl::SpiBase> spi, uint8_t cs_num,
-                 std::shared_ptr<rpl::Gpio> cs_gpio)
-    : spi_(spi), cs_num_(cs_num), cs_gpio_(cs_gpio) {}
+PMW3389::PMW3389() {}
 
 bool PMW3389::Init() {
-  if (!cs_gpio_) {
-    std::cerr << "CS GPIO is not provided!" << std::endl;
+  // Initialize peripheral hardware
+  if (!PeripheralInit()) {
+    std::cerr << "Peripheral initialization failed!" << std::endl;
     return false;
   }
-
-  cs_gpio_->SetAltFunction(rpl::Gpio::AltFunction::kOutput);
-  cs_gpio_->SetPullRegister(rpl::Gpio::PullRegister::kNoRegister);
-  cs_gpio_->Write(true);
 
   // Power up reset
   PowerUpReset();
@@ -53,7 +45,7 @@ bool PMW3389::WriteRegister(Register address, uint8_t data) {
   tx_buf[1] = data;
 
   EnableCs();
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 2);
+  PeripheralSpiTransmitReceive(tx_buf, rx_buf, 2);
   DelayMicroseconds(20);  // tSCLK-NCS for write operation
   DisableCs();
   DelayMicroseconds(100);  // tSWW/tSWR (=120us) minus tSCLK-NCS
@@ -70,9 +62,9 @@ bool PMW3389::ReadRegister(Register address, uint8_t* data) {
   tx_buf[1] = 0;
 
   EnableCs();
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
+  PeripheralSpiTransmitReceive(tx_buf, rx_buf, 1);
   DelayMicroseconds(180);  // tSRAD - delay before reading data
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
+  PeripheralSpiTransmitReceive(tx_buf, rx_buf, 1);
   *data = rx_buf[0];
 
   DelayMicroseconds(1);  // tSCLK-NCS for read operation is 120ns
@@ -139,9 +131,9 @@ bool PMW3389::ReadMotionBurst(MotionBurstData* data) {
 
   EnableCs();
   tx_buf[0] = static_cast<uint8_t>(Register::Motion_Burst);
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
+  PeripheralSpiTransmitReceive(tx_buf, rx_buf, 1);
   DelayMicroseconds(35);  // tSRAD
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 12);
+  PeripheralSpiTransmitReceive(tx_buf, rx_buf, 12);
 
   // Read 12 bytes of burst data
   DisableCs();
@@ -207,11 +199,11 @@ bool PMW3389::UploadFirmware(const uint8_t* firmware_data, size_t length) {
   EnableCs();
 
   tx_buf[0] = static_cast<uint8_t>(Register::SROM_Load_Burst) | 0x80;
-  spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
+  PeripheralSpiTransmitReceive(tx_buf, rx_buf, 1);
   DelayMicroseconds(15);
   for (size_t i = 0; i < length; i++) {
     tx_buf[0] = firmware_data[i];
-    spi_->TransmitAndReceiveBlocking(tx_buf, rx_buf, 1);
+    PeripheralSpiTransmitReceive(tx_buf, rx_buf, 1);
     DelayMicroseconds(15);
   }
   DelayMicroseconds(20);
@@ -273,17 +265,12 @@ void PMW3389::SetRest3Mode() {
   WriteRegister(Register::Rest3_Rate_Upper, 0x01);
 }
 
-void PMW3389::EnableCs() {
-  spi_->SetChipSelectForCommunication(cs_num_);
-  if (cs_gpio_) { cs_gpio_->Write(false); }
-}
+void PMW3389::EnableCs() { PeripheralEnableCs(); }
 
-void PMW3389::DisableCs() {
-  if (cs_gpio_) { cs_gpio_->Write(true); }
-}
+void PMW3389::DisableCs() { PeripheralDisableCs(); }
 
 void PMW3389::DelayMicroseconds(uint32_t us) {
-  std::this_thread::sleep_for(std::chrono::microseconds(us));
+  PeripheralDelayMicroseconds(us);
 }
 
 }  // namespace pmw3389_rpl4_lib

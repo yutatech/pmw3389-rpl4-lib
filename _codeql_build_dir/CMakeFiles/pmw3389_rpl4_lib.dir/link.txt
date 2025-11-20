@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpmw3389_rpl4_lib.a CMakeFiles/pmw3389_rpl4_lib.dir/src/peripheral_interface.cc.o CMakeFiles/pmw3389_rpl4_lib.dir/src/pmw3389.cc.o
+/usr/bin/ranlib libpmw3389_rpl4_lib.a
